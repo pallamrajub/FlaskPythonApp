@@ -1,5 +1,7 @@
 pipeline {
-    agent any
+     agent {
+        label 'dockernode'   // This is your slave/agent label
+    }
 
     environment {
         IMAGE_NAME = 'flaskpythonapp'

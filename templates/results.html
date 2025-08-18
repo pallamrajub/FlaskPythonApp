@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head><title>Results</title></head>
+<body>
+  <h2>✅ Matching Complete!</h2>
+  {% for table in tables %}
+    {{ table|safe }}
+  {% endfor %}
+  <a href="/download">Download Results as CSV</a><br><br>
+  <a href="/">← Back</a>
+</body>
+</html>

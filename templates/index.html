@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head><title>Resume Matcher</title></head>
+<body>
+  <h2>📄 Resume Parser & Keyword Matcher</h2>
+  <form method="post" enctype="multipart/form-data">
+    <label>Upload Resume(s):</label>
+    <input type="file" name="resumes" multiple required><br><br>
+    <label>Enter Job Keywords (quoted phrases):</label>
+    <textarea name="keywords" rows="4" cols="50" placeholder='"Python" "Django" "AWS"' required></textarea><br><br>
+    <input type="submit" value="Parse & Match">
+  </form>
+</body>
+</html>

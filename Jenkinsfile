@@ -1,6 +1,6 @@
 pipeline {
-     agent {
-        label 'slave'   // This is your slave/agent label
+    agent {
+        label 'slave'   // replace with your actual slave/agent label in Jenkins
     }
 
     environment {
@@ -11,8 +11,9 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'cicd-jenkins', credentialsId: 'gitlogin', url: 'git@github.com:pallamrajub/FlaskPythonApp.git'
-                //git 'git@github.com:pallamrajub/FlaskPythonApp.git'
+                git branch: 'cicd-jenkins',
+                    credentialsId: 'gitlogin',
+                    url: 'git@github.com:pallamrajub/FlaskPythonApp.git'
             }
         }
 
@@ -31,15 +32,18 @@ pipeline {
             steps {
                 sh '''
                 . venv/bin/activate
-                pytest tests || echo "No tests found"
+                pytest --junitxml=reports/pytest.xml || echo "No tests found"
                 '''
+                junit 'reports/pytest.xml'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${IMAGE_NAME}")
+                    def commit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    env.IMAGE_TAG = "${IMAGE_NAME}:${BUILD_NUMBER}-${commit}"
+                    docker.build(env.IMAGE_TAG)
                 }
             }
         }
@@ -49,7 +53,17 @@ pipeline {
                 sh '''
                 docker stop ${CONTAINER_NAME} || true
                 docker rm ${CONTAINER_NAME} || true
-                docker run -d --name ${CONTAINER_NAME} -p 5000:5000 ${IMAGE_NAME}
+                docker run -d --name ${CONTAINER_NAME} -p 5000:5000 ${IMAGE_TAG}
+                '''
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                sh '''
+                echo "Waiting for Flask app to start..."
+                sleep 5
+                curl -f http://localhost:5000/ || (echo "App not responding!" && exit 1)
                 '''
             }
         }
@@ -58,6 +72,7 @@ pipeline {
     post {
         always {
             echo 'Pipeline completed.'
+            cleanWs()   // cleanup workspace after build
         }
     }
 }

@@ -11,7 +11,8 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git 'git@github.com:pallamrajub/FlaskPythonApp.git'
+                git branch: 'cicd-jenkins', credentialsId: 'gitlogin', url: 'git@github.com:pallamrajub/FlaskPythonApp.git'
+                //git 'git@github.com:pallamrajub/FlaskPythonApp.git'
             }
         }
 

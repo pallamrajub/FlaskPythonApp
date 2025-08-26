@@ -44,13 +44,13 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy (Docker Run)') {
             steps {
-                echo "Deploying the application..."
-                // Deployment could be:
-                // - Docker run
-                // - Pushing to Kubernetes
-                // - Upload to server
+                sh '''
+                docker stop ${CONTAINER_NAME} || true
+                docker rm ${CONTAINER_NAME} || true
+                docker run -d --name ${CONTAINER_NAME} -p 5000:5000 ${IMAGE_NAME}
+                '''
             }
         }
     }

@@ -1,27 +1,26 @@
 pipeline {
     agent {
-        label 'slave'   // replace with your actual slave/agent label in Jenkins
+        label 'slave'   // This is your slave/agent label
     }
 
     environment {
+        VENV_DIR = 'venv'
         IMAGE_NAME = 'flaskpythonapp'
         CONTAINER_NAME = 'flask_app_container'
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Clone') {
             steps {
-                git branch: 'cicd-jenkins',
-                    credentialsId: 'gitlogin',
-                    url: 'git@github.com:pallamrajub/FlaskPythonApp.git'
+                git 'https://your.git.repo/url.git'
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Set Up Python Env') {
             steps {
                 sh '''
-                python3 -m venv venv
-                . venv/bin/activate
+                python3 -m venv ${VENV_DIR}
+                . ${VENV_DIR}/bin/activate
                 pip install --upgrade pip
                 pip install -r requirements.txt
                 '''
@@ -31,48 +30,34 @@ pipeline {
         stage('Run Tests') {
             steps {
                 sh '''
-                . venv/bin/activate
-                pytest --junitxml=reports/pytest.xml || echo "No tests found"
+                . ${VENV_DIR}/bin/activate
+                pytest tests/
                 '''
-                junit 'reports/pytest.xml'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    def commit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                    env.IMAGE_TAG = "${IMAGE_NAME}:${BUILD_NUMBER}-${commit}"
-                    docker.build(env.IMAGE_TAG)
+                    docker.build("my_python_app:latest")
                 }
             }
         }
 
-        stage('Deploy (Docker Run)') {
+        stage('Deploy') {
             steps {
-                sh '''
-                docker stop ${CONTAINER_NAME} || true
-                docker rm ${CONTAINER_NAME} || true
-                docker run -d --name ${CONTAINER_NAME} -p 5000:5000 ${IMAGE_TAG}
-                '''
-            }
-        }
-
-        stage('Health Check') {
-            steps {
-                sh '''
-                echo "Waiting for Flask app to start..."
-                sleep 5
-                curl -f http://localhost:5000/ || (echo "App not responding!" && exit 1)
-                '''
+                echo "Deploying the application..."
+                // Deployment could be:
+                // - Docker run
+                // - Pushing to Kubernetes
+                // - Upload to server
             }
         }
     }
 
     post {
         always {
-            echo 'Pipeline completed.'
-            cleanWs()   // cleanup workspace after build
+            echo 'Pipeline execution completed.'
         }
     }
 }

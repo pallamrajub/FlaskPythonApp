@@ -1,6 +1,6 @@
 pipeline {
      agent {
-        label 'dockernode'   // This is your slave/agent label
+        label 'slave'   // This is your slave/agent label
     }
 
     environment {
